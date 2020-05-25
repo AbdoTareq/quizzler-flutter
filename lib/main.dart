@@ -1,12 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:quizzler/quizBrain.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
-import 'quizBrain.dart';
+QuizBrain quizBrain = QuizBrain();
 
 void main() => runApp(Quizzler());
-
-QuizBrain quizBrain = QuizBrain();
 
 class Quizzler extends StatelessWidget {
   @override
@@ -32,6 +30,50 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   List<Icon> scoreKeeper = [];
+
+  void checkAnswer(bool userPickedAnswer) {
+    bool correctAnswer = quizBrain.getCorrectAnswer();
+
+    setState(() {
+      //TODO: Step 4 - Use IF/ELSE to check if we've reached the end of the quiz. If so,
+      //On the next line, you can also use if (quizBrain.isFinished()) {}, it does the same thing.
+      if (quizBrain.isFinished() == true) {
+        //TODO Step 4 Part A - show an alert using rFlutter_alert,
+
+        //This is the code for the basic alert from the docs for rFlutter Alert:
+        //Alert(context: context, title: "RFLUTTER", desc: "Flutter is awesome.").show();
+
+        //Modified for our purposes:
+        Alert(
+          context: context,
+          title: 'Finished!',
+          desc: 'You\'ve reached the end of the quiz.',
+        ).show();
+
+        //TODO Step 4 Part C - reset the questionNumber,
+        quizBrain.reset();
+
+        //TODO Step 4 Part D - empty out the scoreKeeper.
+        scoreKeeper = [];
+      }
+
+      //TODO: Step 6 - If we've not reached the end, ELSE do the answer checking steps below 👇
+      else {
+        if (userPickedAnswer == correctAnswer) {
+          scoreKeeper.add(Icon(
+            Icons.check,
+            color: Colors.green,
+          ));
+        } else {
+          scoreKeeper.add(Icon(
+            Icons.close,
+            color: Colors.red,
+          ));
+        }
+        quizBrain.nextQuestion();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +111,8 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                questionMark(true);
+                //The user picked true.
+                checkAnswer(true);
               },
             ),
           ),
@@ -87,65 +130,16 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                questionMark(false);
+                //The user picked false.
+                checkAnswer(false);
               },
             ),
           ),
         ),
-        //TODO: Add a Row here as your score keeper
-        Padding(
-          padding: EdgeInsets.all(8),
-          child: Row(
-            children: scoreKeeper,
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _onBasicAlertPressed(context) {
-    Alert(
-      context: context,
-      title: "Quiz is finished",
-      desc: "You've finished quiz",
-      buttons: [
-        DialogButton(
-          child: Text(
-            "Retry",
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-          onPressed: () => retryButton(),
-          width: 120,
+        Row(
+          children: scoreKeeper,
         )
       ],
-    ).show();
-  }
-
-  void questionMark(bool userAns) {
-    setState(() {
-      if (quizBrain.nextQuestion()) {
-        if (userAns == quizBrain.getQuestionAnswer())
-          scoreKeeper.add(
-            Icon(
-              Icons.check,
-              color: Colors.green,
-            ),
-          );
-        else
-          scoreKeeper.add(
-            Icon(
-              Icons.close,
-              color: Colors.red,
-            ),
-          );
-      } else
-        _onBasicAlertPressed(context);
-    });
-  }
-
-  void retryButton() {
-    Navigator.pop(context);
-    quizBrain.resetQuiz();
-    scoreKeeper = [];
+    );
   }
 }
